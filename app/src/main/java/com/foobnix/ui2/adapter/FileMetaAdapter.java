@@ -150,6 +150,13 @@ public class FileMetaAdapter extends AppRecycleAdapter<FileMeta, RecyclerView.Vi
                 itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.browse_item_list, parent, false);
             } else {
                 itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.browse_item_grid, parent, false);
+                // Android TV (dangbei-tv patch): magnify book card on D-pad focus
+                itemView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                    @Override
+                    public void onFocusChange(View v, boolean hasFocus) {
+                        v.animate().scaleX(hasFocus ? 1.08f : 1.0f).scaleY(hasFocus ? 1.08f : 1.0f).setDuration(120).start();
+                    }
+                });
                 if (tempValue == TEMP_VALUE_STAR_GRID_ITEM || tempValue == TEMP_VALUE_SERIES) {
                     itemView.getLayoutParams().width = ViewGroup.LayoutParams.WRAP_CONTENT;
                     // itemView.getLayoutParams().height = itemView.getLayoutParams().width * 2;

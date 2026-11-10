@@ -154,7 +154,10 @@ public class FileMetaAdapter extends AppRecycleAdapter<FileMeta, RecyclerView.Vi
                 itemView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
                     @Override
                     public void onFocusChange(View v, boolean hasFocus) {
-                        v.animate().scaleX(hasFocus ? 1.08f : 1.0f).scaleY(hasFocus ? 1.08f : 1.0f).setDuration(120).start();
+                        v.animate().scaleX(hasFocus ? 1.15f : 1.0f).scaleY(hasFocus ? 1.15f : 1.0f).setDuration(120).start();
+                        if (android.os.Build.VERSION.SDK_INT >= 21) {
+                            v.setTranslationZ(hasFocus ? Dips.dpToPx(12) : 0);
+                        }
                     }
                 });
                 if (tempValue == TEMP_VALUE_STAR_GRID_ITEM || tempValue == TEMP_VALUE_SERIES) {

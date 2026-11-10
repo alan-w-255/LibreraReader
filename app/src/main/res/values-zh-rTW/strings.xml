@@ -725,4 +725,5 @@
    <string name="add_to_home_screen">新增至主畫面</string>
    <string name="not_supported">不支援</string>
    <string name="update_to_new_app">請升級到我們全新的現代應用程式 %1$s 或 %2$s</string>
+    <string name="smb_network_library">網路書庫(SMB)</string>
 </resources>

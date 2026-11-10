@@ -407,6 +407,9 @@ dependencies {
     implementation(libs.commons.logging.api)
     implementation(libs.guava)
 
+    // SMB network books (dangbei-tv patch)
+    implementation 'com.hierynomus:smbj:0.14.0'
+
     implementation('org.commonmark:commonmark:0.29.0')
     implementation ('org.commonmark:commonmark-ext-gfm-tables:0.30.0')
 

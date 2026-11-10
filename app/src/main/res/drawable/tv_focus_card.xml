@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- D-pad focus highlight for TV (dangbei-tv patch) -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="14dp" />
+            <stroke android:width="3dp" android:color="#FF7043" />
+            <solid android:color="#22FF7043" />
+        </shape>
+    </item>
+</selector>

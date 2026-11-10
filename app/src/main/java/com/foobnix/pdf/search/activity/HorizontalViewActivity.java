@@ -2554,6 +2554,31 @@ public class HorizontalViewActivity extends AdsFragmentActivity {
 
         isMyKey = false;
 
+        // Android TV / D-pad support (dangbei-tv patch): always active, even with volume-keys navigation off
+        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
+            if (closeDialogs()) {
+                return true;
+            }
+            doShowHideWrapperControlls();
+            return true;
+        }
+        if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN || keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+            if (closeDialogs()) {
+                return true;
+            }
+            if (PageImageState.get().hasSelectedWords()) {
+                dc.clearSelectedText();
+                return true;
+            }
+            if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                nextPage();
+            } else {
+                prevPage();
+            }
+            flippingTimer = 0;
+            return true;
+        }
+
         if (AppState.get().isUseVolumeKeys) {
 
             int repeatCount = event.getRepeatCount();

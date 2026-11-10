@@ -690,6 +690,14 @@ public class DocumentWrapperUI {
             return true;
         }
 
+        // Android TV / D-pad support (dangbei-tv patch)
+        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
+            if (closeDialogs()) {
+                return true;
+            }
+            doShowHideWrapperControlls();
+            return true;
+        }
         if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
             dc.onScrollDown();
             return true;

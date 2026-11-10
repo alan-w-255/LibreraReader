@@ -6,6 +6,8 @@
     android:layout_height="wrap_content"
     android:layout_margin="@dimen/dv"
     android:background="?android:attr/selectableItemBackground"
+    android:focusable="true"
+    android:foreground="@drawable/tv_focus_card"
     card_view:cardCornerRadius="@dimen/radius"
     card_view:cardElevation="@dimen/dv" >
 

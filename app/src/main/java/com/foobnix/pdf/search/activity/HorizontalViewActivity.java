@@ -1158,11 +1158,14 @@ public class HorizontalViewActivity extends AdsFragmentActivity {
                     loadUI();
 
                     // Android TV (dangbei-tv patch): always open a book in reading mode
-                    // (bars hidden, arrows turn pages); OK brings the bars back
+                    // (bars hidden, arrows turn pages); OK brings the bars back.
+                    // prev starts false, so hideShow() below would early-return and
+                    // leave the bars at their XML-default visible state - flip it.
                     AppState.get().isEditMode = false;
                     if (AppState.get().isEnableAccessibility) {
                         AppState.get().isEditMode = true;
                     }
+                    prev = !AppState.get().isEditMode;
                     int pageFromUri = dc.getCurentPage();
                     updateUI(pageFromUri);
                     hideShow();
@@ -2043,8 +2046,8 @@ public class HorizontalViewActivity extends AdsFragmentActivity {
                 @Override
                 public void run() {
                     AppSP.get().isFirstTimeHorizontal = false;
-                    AppState.get().isEditMode = true;
-                    hideShow();
+                    // Android TV (dangbei-tv patch): no auto-showing the bars on first
+                    // open - the remote has no tap-to-dismiss, it deadlocked reading
                     Views.showHelpToast(lockModelImage);
 
                 }

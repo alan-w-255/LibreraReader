@@ -542,6 +542,12 @@ public class DocumentWrapperUI {
             } else if (!dc.getLinkHistory().isEmpty()) {
                 dc.onLinkHistory();
                 return true;
+            } else if (AppState.get().isEditMode) {
+                // Android TV (dangbei-tv patch): BACK hides the reading bars
+                // and stays in the book; a second BACK exits
+                AppState.get().isEditMode = false;
+                hideShow();
+                return true;
             }
         }
         return false;
@@ -704,7 +710,7 @@ public class DocumentWrapperUI {
         }
 
         // Android TV / D-pad support (dangbei-tv patch)
-        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
+        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) {
             if (closeDialogs()) {
                 return true;
             }
@@ -1453,6 +1459,11 @@ public class DocumentWrapperUI {
         hideShowPrevNext();
         dc.initAnchor(anchor);
         TxtUtils.updateAllLinks(parentParent);
+
+        // Android TV (dangbei-tv patch): always open in reading mode (bars
+        // hidden); isEditMode is remembered across sessions upstream
+        AppState.get().isEditMode = AppState.get().isEnableAccessibility;
+        hideShow();
     }
 
     public void updateSeekBarColorAndSize() {
@@ -1724,6 +1735,12 @@ public class DocumentWrapperUI {
     }
 
     public void initToolBarPlusMinus() {
+        if (toolBarButton == null) {
+            // Android TV (dangbei-tv patch): hideShow() can run before the rest
+            // of initUI has wired these views (VerticalViewActivity calls it
+            // from onCreate); skip until they exist
+            return;
+        }
         if (AppState.get().isShowToolBar) {
             toolBarButton.setImageResource(R.drawable.glyphicons_415_push_pin);
         } else {
@@ -1915,14 +1932,18 @@ public class DocumentWrapperUI {
     }
 
     public void hide() {
-        menuLayout.setVisibility(View.GONE);
-        bottomBar.setVisibility(View.GONE);
-        //adFrame.setVisibility(View.GONE);
-        // adFrame.setClickable(false);
-        imageMenuArrow.setImageResource(android.R.drawable.arrow_down_float);
-
-        // speedSeekBar.setVisibility(View.GONE);
-
+        // Android TV (dangbei-tv patch): null guards - this can run before the
+        // full UI is wired (VerticalViewActivity calls hideShow from onCreate)
+        // and imageMenuArrow only exists in the embedded layout
+        if (menuLayout != null) {
+            menuLayout.setVisibility(View.GONE);
+        }
+        if (bottomBar != null) {
+            bottomBar.setVisibility(View.GONE);
+        }
+        if (imageMenuArrow != null) {
+            imageMenuArrow.setImageResource(android.R.drawable.arrow_down_float);
+        }
     }
 
     public void _hideSeekBarInReadMode() {
@@ -2165,8 +2186,8 @@ public class DocumentWrapperUI {
                 @Override
                 public void run() {
                     AppSP.get().isFirstTimeVertical = false;
-                    AppState.get().isEditMode = true;
-                    hideShow();
+                    // Android TV (dangbei-tv patch): no auto-showing the bars on first
+                    // open - the remote has no tap-to-dismiss
                     Views.showHelpToast(lockUnlock);
 
                 }

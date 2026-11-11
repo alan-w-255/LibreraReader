@@ -132,4 +132,27 @@ public class TvFocus {
         }
         return false;
     }
+
+    /**
+     * Explicit UP/DOWN hop between the two reading bars. Default focus search
+     * prefers the huge page view over the opposite bar, dropping focus to the page.
+     */
+    public static boolean hopBetweenBars(Activity a, View from, View to) {
+        if (a == null) {
+            return false;
+        }
+        if (!inside(from, a.getCurrentFocus())) {
+            return false;
+        }
+        ViewGroup g = asGroup(to);
+        if (g == null) {
+            return false;
+        }
+        View f = firstFocusable(g);
+        if (f != null) {
+            f.requestFocus();
+            return true;
+        }
+        return false;
+    }
 }

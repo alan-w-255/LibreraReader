@@ -2567,6 +2567,13 @@ public class HorizontalViewActivity extends AdsFragmentActivity {
             }
             if (kc == KeyEvent.KEYCODE_DPAD_LEFT || kc == KeyEvent.KEYCODE_DPAD_RIGHT
                     || kc == KeyEvent.KEYCODE_DPAD_UP || kc == KeyEvent.KEYCODE_DPAD_DOWN) {
+                // Explicit hops between the two bars: default focus search drops to the page view
+                if (kc == KeyEvent.KEYCODE_DPAD_UP && TvFocus.hopBetweenBars(this, bottomBar, actionBar)) {
+                    return true;
+                }
+                if (kc == KeyEvent.KEYCODE_DPAD_DOWN && TvFocus.hopBetweenBars(this, actionBar, bottomBar)) {
+                    return true;
+                }
                 if (TvFocus.routeToBars(this, bottomBar, actionBar)) {
                     return true;
                 }

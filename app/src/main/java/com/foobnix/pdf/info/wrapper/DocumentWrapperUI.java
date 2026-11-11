@@ -580,9 +580,19 @@ public class DocumentWrapperUI {
                 || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT
                 || keyCode == KeyEvent.KEYCODE_DPAD_UP
                 || keyCode == KeyEvent.KEYCODE_DPAD_DOWN)) {
-            if (dc != null && dc.getActivity() != null
-                    && TvFocus.routeToBars(dc.getActivity(), menuLayout, bottomBar)) {
-                return true;
+            if (dc != null && dc.getActivity() != null) {
+                // Explicit hops between the two bars: default focus search drops to the page view
+                if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN
+                        && TvFocus.hopBetweenBars(dc.getActivity(), menuLayout, bottomBar)) {
+                    return true;
+                }
+                if (keyCode == KeyEvent.KEYCODE_DPAD_UP
+                        && TvFocus.hopBetweenBars(dc.getActivity(), bottomBar, menuLayout)) {
+                    return true;
+                }
+                if (TvFocus.routeToBars(dc.getActivity(), menuLayout, bottomBar)) {
+                    return true;
+                }
             }
         }
 

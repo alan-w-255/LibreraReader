@@ -86,6 +86,7 @@ import com.foobnix.tts.TTSService;
 import com.foobnix.tts.TtsStatus;
 import com.foobnix.ui2.AdsFragmentActivity;
 import com.foobnix.ui2.AppDB;
+import com.foobnix.ui2.TvFocus;
 import com.foobnix.ui2.MainTabs2;
 
 import org.ebookdroid.BookType;
@@ -567,6 +568,18 @@ public class DocumentWrapperUI {
             keyCode = event.getScanCode();
         }
 
+        // Android TV (dangbei-tv patch): with the bars on screen, D-pad arrows walk the
+        // bar buttons instead of scrolling/paging
+        if (AppState.get().isEditMode && (keyCode == KeyEvent.KEYCODE_DPAD_LEFT
+                || keyCode == KeyEvent.KEYCODE_DPAD_RIGHT
+                || keyCode == KeyEvent.KEYCODE_DPAD_UP
+                || keyCode == KeyEvent.KEYCODE_DPAD_DOWN)) {
+            if (dc != null && dc.getActivity() != null
+                    && TvFocus.routeToBars(dc.getActivity(), titleBar, bottomBar)) {
+                return true;
+            }
+        }
+
         if (keyCode == KeyEvent.KEYCODE_ESCAPE) {
             return true;
         }
@@ -655,7 +668,7 @@ public class DocumentWrapperUI {
             }
         }
 
-        if (!TTSEngine.get().isPlaying()) {
+        if (!TTSEngine.get().isPlaying() && !AppState.get().isEditMode) {
             if (AppState.get().isUseVolumeKeys && AppState.get().getNextKeys().contains(keyCode)) {
                 if (closeDialogs()) {
                     return true;
@@ -695,14 +708,18 @@ public class DocumentWrapperUI {
             if (closeDialogs()) {
                 return true;
             }
+            if (AppState.get().isEditMode && dc != null && dc.getActivity() != null
+                    && TvFocus.routeToBars(dc.getActivity(), titleBar, bottomBar)) {
+                return true;
+            }
             doShowHideWrapperControlls();
             return true;
         }
-        if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+        if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN && !AppState.get().isEditMode) {
             dc.onScrollDown();
             return true;
         }
-        if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+        if (keyCode == KeyEvent.KEYCODE_DPAD_UP && !AppState.get().isEditMode) {
             dc.onScrollUp();
             return true;
         }

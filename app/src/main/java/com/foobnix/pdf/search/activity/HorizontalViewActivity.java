@@ -115,6 +115,7 @@ import com.foobnix.tts.TtsStatus;
 import com.foobnix.ui2.AdsFragmentActivity;
 import com.foobnix.ui2.AppDB;
 import com.foobnix.ui2.MainTabs2;
+import com.foobnix.ui2.TvFocus;
 import com.foobnix.ui2.MyContextWrapper;
 import com.foobnix.librerax.BookOpenGuard;
 import com.foobnix.librerax.LibreraX;
@@ -334,6 +335,9 @@ public class HorizontalViewActivity extends AdsFragmentActivity {
         progressDraw = (ProgressDraw) findViewById(R.id.progressDraw);
 
         actionBar = (LinearLayout) findViewById(R.id.actionBar);
+        // Android TV (dangbei-tv patch): the bar container itself must not steal D-pad
+        // focus from its buttons
+        actionBar.setFocusable(false);
         bottomPanel = (LinearLayout) findViewById(R.id.bottomPanel);
 
         bottomBar = findViewById(R.id.bottomBar);
@@ -2543,6 +2547,22 @@ public class HorizontalViewActivity extends AdsFragmentActivity {
     }
 
     @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        // Android TV (dangbei-tv patch): with the reading bars on screen, D-pad arrows
+        // walk the bar buttons (night mode, settings, ...) instead of turning pages
+        if (event.getAction() == KeyEvent.ACTION_DOWN && AppState.get().isEditMode) {
+            int kc = event.getKeyCode();
+            if (kc == KeyEvent.KEYCODE_DPAD_LEFT || kc == KeyEvent.KEYCODE_DPAD_RIGHT
+                    || kc == KeyEvent.KEYCODE_DPAD_UP || kc == KeyEvent.KEYCODE_DPAD_DOWN) {
+                if (TvFocus.routeToBars(this, bottomBar, actionBar)) {
+                    return true;
+                }
+                // focus already inside the bars: normal focus navigation takes over
+            }
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
     public boolean onKeyDown(final int keyCode1, final KeyEvent event) {
 
         int keyCode = event.getKeyCode();
@@ -2559,10 +2579,22 @@ public class HorizontalViewActivity extends AdsFragmentActivity {
             if (closeDialogs()) {
                 return true;
             }
+            if (AppState.get().isEditMode && TvFocus.routeToBars(this, bottomBar, actionBar)) {
+                return true;
+            }
             doShowHideWrapperControlls();
+            if (AppState.get().isEditMode) {
+                bottomBar.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        TvFocus.routeToBars(HorizontalViewActivity.this, bottomBar, actionBar);
+                    }
+                });
+            }
             return true;
         }
-        if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN || keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+        if ((keyCode == KeyEvent.KEYCODE_DPAD_DOWN || keyCode == KeyEvent.KEYCODE_DPAD_UP)
+                && !AppState.get().isEditMode) {
             if (closeDialogs()) {
                 return true;
             }
@@ -2645,7 +2677,8 @@ public class HorizontalViewActivity extends AdsFragmentActivity {
                 return true;
             }
 
-            if (!TTSEngine.get().isPlaying()) {
+            // dangbei-tv patch: never page with the reading bars on screen
+            if (!TTSEngine.get().isPlaying() && !AppState.get().isEditMode) {
                 if (AppState.get().getNextKeys().contains(keyCode)) {
                     if (closeDialogs()) {
                         isMyKey = true;

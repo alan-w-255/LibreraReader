@@ -509,6 +509,15 @@ public class SlidingTabLayout extends HorizontalScrollView {
             }
         }
 
+        // Android TV (dangbei-tv patch): make D-pad focus visible on the tab
+        final int tabNormalColor = textView.getCurrentTextColor();
+        textView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                v.animate().scaleX(hasFocus ? 1.15f : 1.0f).scaleY(hasFocus ? 1.15f : 1.0f).setDuration(100).start();
+                ((TextView) v).setTextColor(hasFocus ? 0xFFFF7043 : tabNormalColor);
+            }
+        });
         return textView;
     }
 

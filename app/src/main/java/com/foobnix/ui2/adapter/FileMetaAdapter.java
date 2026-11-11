@@ -150,13 +150,28 @@ public class FileMetaAdapter extends AppRecycleAdapter<FileMeta, RecyclerView.Vi
                 itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.browse_item_list, parent, false);
             } else {
                 itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.browse_item_grid, parent, false);
-                // Android TV (dangbei-tv patch): magnify book card on D-pad focus
+                // Android TV (dangbei-tv patch): highlight book card color on D-pad focus (no zoom)
                 itemView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
                     @Override
                     public void onFocusChange(View v, boolean hasFocus) {
-                        v.animate().scaleX(hasFocus ? 1.15f : 1.0f).scaleY(hasFocus ? 1.15f : 1.0f).setDuration(120).start();
-                        if (android.os.Build.VERSION.SDK_INT >= 21) {
-                            v.setTranslationZ(hasFocus ? Dips.dpToPx(12) : 0);
+                        if (!(v instanceof CardView)) {
+                            return;
+                        }
+                        CardView card = (CardView) v;
+                        if (hasFocus) {
+                            Object prev = card.getTag(R.id.tvfocus_orig_bg);
+                            if (prev == null) {
+                                card.setTag(R.id.tvfocus_orig_bg, card.getCardBackgroundColor());
+                            }
+                            card.setCardBackgroundColor(0x33FF7043);
+                            card.setForeground(androidx.core.content.ContextCompat.getDrawable(card.getContext(), R.drawable.tv_focus_card));
+                        } else {
+                            Object prev = card.getTag(R.id.tvfocus_orig_bg);
+                            if (prev instanceof android.content.res.ColorStateList) {
+                                card.setCardBackgroundColor((android.content.res.ColorStateList) prev);
+                            }
+                            card.setForeground(null);
+                            card.setTag(R.id.tvfocus_orig_bg, null);
                         }
                     }
                 });

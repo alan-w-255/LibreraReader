@@ -1,22 +1,39 @@
 package com.foobnix.ui2;
 
 import android.app.Activity;
-import android.os.Build;
+import android.graphics.drawable.GradientDrawable;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 
 import com.foobnix.android.utils.Dips;
+import com.foobnix.pdf.info.R;
 
 /** D-pad focus helpers for TV (dangbei-tv patch). */
 public class TvFocus {
 
-    public static final View.OnFocusChangeListener SCALE_BUTTON = new View.OnFocusChangeListener() {
+    /** Accent overlay for focused TV controls (translucent orange). */
+    public static final int HIGHLIGHT = 0x59FF9800;
+
+    /**
+     * Color highlight on focus (no magnification, per user request).
+     * Saves the original background in a tag and restores it on blur.
+     */
+    public static final View.OnFocusChangeListener COLOR_BUTTON = new View.OnFocusChangeListener() {
         @Override
         public void onFocusChange(View v, boolean hasFocus) {
-            v.animate().scaleX(hasFocus ? 1.25f : 1.0f).scaleY(hasFocus ? 1.25f : 1.0f).setDuration(100).start();
-            if (Build.VERSION.SDK_INT >= 21) {
-                v.setTranslationZ(hasFocus ? Dips.dpToPx(10) : 0);
+            Object prev = v.getTag(R.id.tvfocus_orig_bg);
+            if (hasFocus) {
+                if (prev == null) {
+                    v.setTag(R.id.tvfocus_orig_bg, v.getBackground());
+                    GradientDrawable d = new GradientDrawable();
+                    d.setColor(HIGHLIGHT);
+                    d.setCornerRadius(Dips.dpToPx(4));
+                    v.setBackground(d);
+                }
+            } else if (prev != null) {
+                v.setBackground((android.graphics.drawable.Drawable) prev);
+                v.setTag(R.id.tvfocus_orig_bg, null);
             }
         }
     };
@@ -49,7 +66,7 @@ public class TvFocus {
                 if (!c.isFocusable()) {
                     c.setFocusable(true);
                 }
-                c.setOnFocusChangeListener(SCALE_BUTTON);
+                c.setOnFocusChangeListener(COLOR_BUTTON);
             }
             if (c instanceof ViewGroup) {
                 makeFocusable((ViewGroup) c);

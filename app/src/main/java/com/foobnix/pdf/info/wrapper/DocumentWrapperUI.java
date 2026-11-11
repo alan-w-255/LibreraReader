@@ -581,7 +581,7 @@ public class DocumentWrapperUI {
                 || keyCode == KeyEvent.KEYCODE_DPAD_UP
                 || keyCode == KeyEvent.KEYCODE_DPAD_DOWN)) {
             if (dc != null && dc.getActivity() != null
-                    && TvFocus.routeToBars(dc.getActivity(), titleBar, bottomBar)) {
+                    && TvFocus.routeToBars(dc.getActivity(), menuLayout, bottomBar)) {
                 return true;
             }
         }
@@ -715,10 +715,22 @@ public class DocumentWrapperUI {
                 return true;
             }
             if (AppState.get().isEditMode && dc != null && dc.getActivity() != null
-                    && TvFocus.routeToBars(dc.getActivity(), titleBar, bottomBar)) {
+                    && TvFocus.routeToBars(dc.getActivity(), menuLayout, bottomBar)) {
                 return true;
             }
             doShowHideWrapperControlls();
+            // Route focus into the freshly shown toolbar (menuLayout = real top button row;
+            // titleBar is only the thin name strip whose handle used to trap focus).
+            if (AppState.get().isEditMode && menuLayout != null) {
+                menuLayout.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (AppState.get().isEditMode && dc != null && dc.getActivity() != null) {
+                            TvFocus.routeToBars(dc.getActivity(), menuLayout, bottomBar);
+                        }
+                    }
+                });
+            }
             return true;
         }
         if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN && !AppState.get().isEditMode) {

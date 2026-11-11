@@ -42,7 +42,7 @@ public class SmbDirsDialog {
             row.setPadding(0, pad, 0, pad / 2);
             row.setClickable(true);
             row.setFocusable(true);
-            row.setOnFocusChangeListener(TvFocus.SCALE_BUTTON);
+            row.setOnFocusChangeListener(TvFocus.COLOR_BUTTON);
             row.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -58,7 +58,7 @@ public class SmbDirsDialog {
         add.setPadding(0, pad / 2, 0, pad / 2);
         add.setClickable(true);
         add.setFocusable(true);
-        add.setOnFocusChangeListener(TvFocus.SCALE_BUTTON);
+        add.setOnFocusChangeListener(TvFocus.COLOR_BUTTON);
         add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -73,7 +73,7 @@ public class SmbDirsDialog {
         sync.setPadding(0, pad / 2, 0, 0);
         sync.setClickable(true);
         sync.setFocusable(true);
-        sync.setOnFocusChangeListener(TvFocus.SCALE_BUTTON);
+        sync.setOnFocusChangeListener(TvFocus.COLOR_BUTTON);
         sync.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

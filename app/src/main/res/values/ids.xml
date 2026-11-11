@@ -9,4 +9,6 @@
     <!-- Set on a link drawn as a ringed button: its words are not underlined, as the ring already
          says it can be pressed. -->
     <item name="linkButton" type="id" />
+    <!-- Original background of a TV-focused view, saved by TvFocus.COLOR_BUTTON before highlighting. -->
+    <item name="tvfocus_orig_bg" type="id" />
 </resources>

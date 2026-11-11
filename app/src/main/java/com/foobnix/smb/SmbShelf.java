@@ -14,6 +14,8 @@ import com.foobnix.sys.TempHolder;
 import com.foobnix.ui2.AppDB;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
@@ -34,12 +36,15 @@ public class SmbShelf {
         return SmbHelper.isSmbPath(path);
     }
 
-    /** Scan the share and add placeholder rows. Returns {added, alreadyLocal}. Blocks. */
-    public static int[] syncToShelf(Context c, String rootRel) throws Exception {
-        final SmbServerPrefs.Srv s = SmbServerPrefs.get(c);
+    /** Scan every configured server and add placeholder rows. Returns {added, alreadyLocal}. Blocks. */
+    public static int[] syncToShelf(Context c) throws Exception {
+        final List<SmbServerPrefs.Srv> servers = SmbServerPrefs.all(c);
         File booksDir = new File(Environment.getExternalStorageDirectory(), "Books");
         final int[] res = {0, 0};
-        SmbHelper.walkBooks(s, rootRel, new SmbHelper.BookCollector() {
+        final List<String> prefixes = new ArrayList<String>();
+        for (final SmbServerPrefs.Srv s : servers) {
+        prefixes.add(SmbHelper.smbUrlOf(s, s.path == null ? "" : s.path) + "/");
+        SmbHelper.walkBooks(s, s.path == null ? "" : s.path, new SmbHelper.BookCollector() {
             @Override
             public void onBook(String rel, long size) {
                 try {
@@ -73,8 +78,32 @@ public class SmbShelf {
                 }
             }
         });
+        }
+        purgeStaleRows(prefixes);
         TempHolder.listHash++;
         return res;
+    }
+
+    /** Drop shelf rows that belong to no configured server any more. */
+    static void purgeStaleRows(List<String> prefixes) {
+        try {
+            List<FileMeta> all = AppDB.get().getAllSmb();
+            for (FileMeta m : all) {
+                String p = m.getPath();
+                boolean keep = false;
+                for (String pre : prefixes) {
+                    if (p.startsWith(pre)) {
+                        keep = true;
+                        break;
+                    }
+                }
+                if (!keep) {
+                    AppDB.get().deleteBy(p);
+                }
+            }
+        } catch (Exception e) {
+            LOG.e(e);
+        }
     }
 
     static void ensureLocalRow(String localPath, String name, long size) {
@@ -112,12 +141,19 @@ public class SmbShelf {
 
     /** Called from ExtUtils.openFile for smb:// rows. UI thread. */
     public static void openFromShelf(final Activity a, final FileMeta meta) {
-        final SmbServerPrefs.Srv s = SmbServerPrefs.get(a);
         final String url = meta.getPath();
-        if (!url.startsWith(SmbHelper.smbUrlOf(s, ""))) {
+        SmbServerPrefs.Srv found = null;
+        for (SmbServerPrefs.Srv s : SmbServerPrefs.all(a)) {
+            if (url.startsWith(SmbHelper.smbUrlOf(s, "") + "/")) {
+                found = s;
+                break;
+            }
+        }
+        if (found == null) {
             Toast.makeText(a, R.string.smb_server_changed, Toast.LENGTH_LONG).show();
             return;
         }
+        final SmbServerPrefs.Srv s = found;
         final String rel = SmbHelper.relFromSmbUrl(url);
         if (rel == null || rel.isEmpty()) {
             return;

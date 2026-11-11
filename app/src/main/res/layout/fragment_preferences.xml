@@ -159,6 +159,18 @@
 
             </LinearLayout>
 
+            <!-- dangbei-tv patch: cloud bookshelf (SMB) directories -->
+            <TextView
+                android:id="@+id/onSmbDirs"
+                style="@style/textSectionTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="12dip"
+                android:text="@string/smb_dirs_title" />
+
             <!-- Points the apps being replaced to Librera Reader and LibreraX, see
                  PrefFragment2.showUpdateNotice. -->
             <TextView

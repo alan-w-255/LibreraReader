@@ -412,6 +412,12 @@ public class PrefFragment2 extends UIFragment {
 
         section8 = inflate.findViewById(R.id.section8);
 
+        // dangbei-tv patch: cloud bookshelf (SMB) directories
+        View onSmbDirs = inflate.findViewById(R.id.onSmbDirs);
+        if (onSmbDirs != null) {
+            onSmbDirs.setOnClickListener(v -> com.foobnix.smb.SmbDirsDialog.show(getActivity()));
+        }
+
         inflate.findViewById(R.id.sectionSync)
                .setVisibility(AppsConfig.IS_FDROID ? View.GONE : View.VISIBLE);
         //inflate.findViewById(R.id.sectionSync).setVisibility(View.GONE);//TODO GDIVE need to fix

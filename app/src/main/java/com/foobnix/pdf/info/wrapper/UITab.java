@@ -11,7 +11,6 @@ import com.foobnix.ui2.fragment.OpdsFragment2;
 import com.foobnix.ui2.fragment.PrefFragment2;
 import com.foobnix.ui2.fragment.RecentFragment2;
 import com.foobnix.ui2.fragment.SearchFragment2;
-import com.foobnix.ui2.fragment.SmbFragment2;
 import com.foobnix.ui2.fragment.UIFragment;
 
 import java.util.ArrayList;
@@ -27,8 +26,7 @@ public enum UITab {
     OpdsFragment(5, OpdsFragment2.PAIR.first, OpdsFragment2.PAIR.second, OpdsFragment2.class, true), //
     PrefFragment(6, PrefFragment2.PAIR.first, PrefFragment2.PAIR.second, PrefFragment2.class, true), //
     //CloudsFragment(7, CloudsFragment2.PAIR.first, CloudsFragment2.PAIR.second, CloudsFragment2.class, true), //
-    GoogleDrive2Fragment(7, GoogleDriveFragment2.PAIR.first, GoogleDriveFragment2.PAIR.second, GoogleDriveFragment2.class, true), //
-    SmbFragment(8, SmbFragment2.PAIR.first, SmbFragment2.PAIR.second, SmbFragment2.class, true); //
+    GoogleDrive2Fragment(7, GoogleDriveFragment2.PAIR.first, GoogleDriveFragment2.PAIR.second, GoogleDriveFragment2.class, true); //
 
     public int index;
     private int name;
@@ -77,14 +75,15 @@ public enum UITab {
             for (String pair : input.split(",")) {
                 String[] tab = pair.split("#");
                 int id = Integer.valueOf(tab[0]);
+                if (id == 8) {
+                    // dangbei-tv patch: the SMB tab is gone (moved into Settings); skip
+                    // entries saved by builds that had it
+                    continue;
+                }
                 boolean isVisible = tab[1].equals("1");
                 UITab byIndex = getByIndex(id);
                 byIndex.setVisible(isVisible);
                 list.add(byIndex);
-            }
-            // dangbei-tv patch: make the SMB tab appear for configs saved before it existed
-            if (!input.contains(SmbFragment.index + "#")) {
-                list.add(SmbFragment);
             }
             return list;
         }

@@ -1157,7 +1157,9 @@ public class HorizontalViewActivity extends AdsFragmentActivity {
 
                     loadUI();
 
-                    // AppState.get().isEditMode = false; //remember last
+                    // Android TV (dangbei-tv patch): always open a book in reading mode
+                    // (bars hidden, arrows turn pages); OK brings the bars back
+                    AppState.get().isEditMode = false;
                     if (AppState.get().isEnableAccessibility) {
                         AppState.get().isEditMode = true;
                     }
@@ -2552,6 +2554,14 @@ public class HorizontalViewActivity extends AdsFragmentActivity {
         // walk the bar buttons (night mode, settings, ...) instead of turning pages
         if (event.getAction() == KeyEvent.ACTION_DOWN && AppState.get().isEditMode) {
             int kc = event.getKeyCode();
+            if (kc == KeyEvent.KEYCODE_BACK) {
+                // Android TV (dangbei-tv patch): BACK hides the reading bars instead
+                // of exiting the book; floating dialogs close first
+                closeDialogs();
+                AppState.get().isEditMode = false;
+                hideShow();
+                return true;
+            }
             if (kc == KeyEvent.KEYCODE_DPAD_LEFT || kc == KeyEvent.KEYCODE_DPAD_RIGHT
                     || kc == KeyEvent.KEYCODE_DPAD_UP || kc == KeyEvent.KEYCODE_DPAD_DOWN) {
                 if (TvFocus.routeToBars(this, bottomBar, actionBar)) {
@@ -2574,8 +2584,19 @@ public class HorizontalViewActivity extends AdsFragmentActivity {
 
         isMyKey = false;
 
+        // Android TV (dangbei-tv patch): BACK dismisses the reading bars first.
+        // onKeyUp's anchor-dialog branch would otherwise swallow the key before
+        // onBackPressedImpl ever runs; skip when a real anchor dialog is up.
+        if (keyCode == KeyEvent.KEYCODE_BACK && AppState.get().isEditMode) {
+            // a floating dialog (TTS, bookmark, ...) wins over hiding the bars
+            closeDialogs();
+            AppState.get().isEditMode = false;
+            hideShow();
+            return true;
+        }
+
         // Android TV / D-pad support (dangbei-tv patch): always active, even with volume-keys navigation off
-        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
+        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) {
             if (closeDialogs()) {
                 return true;
             }
@@ -2765,6 +2786,13 @@ public class HorizontalViewActivity extends AdsFragmentActivity {
         }
 
         if (closeDialog()) {
+            return;
+        }
+
+        // Android TV (dangbei-tv patch): BACK dismisses the reading bars first
+        if (AppState.get().isEditMode) {
+            AppState.get().isEditMode = false;
+            hideShow();
             return;
         }
 

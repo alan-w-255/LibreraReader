@@ -52,6 +52,7 @@
         android:required="false" />
 
     <application
+        android:enableOnBackInvokedCallback="false"
         android:hardwareAccelerated="true"
         android:name="com.foobnix.LibreraApp"
         android:icon="${appIcon}"

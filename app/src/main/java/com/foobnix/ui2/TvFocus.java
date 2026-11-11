@@ -13,7 +13,7 @@ import com.foobnix.pdf.info.R;
 public class TvFocus {
 
     /** Accent overlay for focused TV controls (translucent orange). */
-    public static final int HIGHLIGHT = 0x59FF9800;
+    public static final int HIGHLIGHT = 0xB3FF9800;
 
     /**
      * Color highlight on focus (no magnification, per user request).

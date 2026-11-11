@@ -67,6 +67,7 @@ import com.foobnix.model.AppState;
 import com.foobnix.pdf.info.model.BookCSS;
 import com.foobnix.pdf.info.widget.ChooserDialogFragment;
 import com.foobnix.pdf.info.widget.PrefDialogs;
+import com.foobnix.smb.SmbShelf;
 import com.foobnix.pdf.info.wrapper.DocumentController;
 import com.foobnix.pdf.search.activity.HorizontalModeController;
 import com.foobnix.pdf.search.activity.HorizontalViewActivity;
@@ -316,6 +317,10 @@ public class ExtUtils {
     }
 
     public static void openFile(Activity a, FileMeta meta) {
+        if (SmbShelf.isSmb(meta.getPath())) {
+            SmbShelf.openFromShelf(a, meta);
+            return;
+        }
         File file = new File(meta.getPath());
 
         String safPath = ExtUtils.isExteralSD(meta.getPath()) ? meta.getPath() : null;
@@ -2135,6 +2140,10 @@ public class ExtUtils {
             // A book on added storage is named by a document uri, and no File can be asked
             // whether it is still there: asking would drop every one of them.
             if (isExteralSD(path)) {
+                continue;
+            }
+            // A cloud bookshelf book is named by an smb:// url: no local File to ask for
+            if (SmbShelf.isSmb(path)) {
                 continue;
             }
             if (!new File(path).exists()) {

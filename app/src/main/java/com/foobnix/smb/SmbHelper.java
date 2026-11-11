@@ -38,6 +38,67 @@ public class SmbHelper {
         void onProgress(long done, long total);
     }
 
+    public interface BookCollector {
+        void onBook(String relPath, long size);
+    }
+
+    public static String smbUrlOf(SmbServerPrefs.Srv s, String rel) {
+        return "smb://" + s.host + "/" + s.share + (rel == null || rel.isEmpty() ? "" : "/" + rel);
+    }
+
+    public static boolean isSmbPath(String path) {
+        return path != null && path.startsWith("smb://");
+    }
+
+    /** smb://host/share/rel -> rel ("zlibrary/epub/x.epub"); "" if not matchable. */
+    public static String relFromSmbUrl(String url) {
+        if (!isSmbPath(url)) {
+            return null;
+        }
+        String t = url.substring("smb://".length());
+        int i1 = t.indexOf('/');
+        if (i1 < 0) {
+            return "";
+        }
+        int i2 = t.indexOf('/', i1 + 1);
+        if (i2 < 0) {
+            return "";
+        }
+        return t.substring(i2 + 1);
+    }
+
+    /** Walk the whole share recursively on ONE connection, calling back for every file. */
+    public static void walkBooks(SmbServerPrefs.Srv s, String root, BookCollector cb) throws Exception {
+        SMBClient client = new SMBClient();
+        try {
+            DiskShare share = connect(client, s);
+            try {
+                walkRec(share, root == null ? "" : root, cb);
+            } finally {
+                try { share.close(); } catch (Exception ignore) {}
+            }
+        } finally {
+            try { client.close(); } catch (Exception ignore) {}
+        }
+    }
+
+    private static void walkRec(DiskShare share, String dir, BookCollector cb) throws Exception {
+        List<FileIdBothDirectoryInformation> infos = share.list(smbPath(dir));
+        for (FileIdBothDirectoryInformation i : infos) {
+            String n = i.getFileName();
+            if (n == null || n.isEmpty() || n.equals(".") || n.equals("..")) {
+                continue;
+            }
+            boolean isDir = (i.getFileAttributes() & 0x10L) != 0;
+            String rel = dir == null || dir.isEmpty() ? n : dir + "/" + n;
+            if (isDir) {
+                walkRec(share, rel, cb);
+            } else {
+                cb.onBook(rel, i.getEndOfFile());
+            }
+        }
+    }
+
     static String smbPath(String p) {
         if (p == null || p.isEmpty()) return "";
         return p.replace("/", "\\");

@@ -298,6 +298,19 @@ public class AppDB {
         }
     }
 
+    /** dangbei-tv patch: cloud bookshelf rows (smb:// paths) kept only in the DB. */
+    public List<FileMeta> getAllSmb() {
+        if (fileMetaDao == null) {
+            return Collections.emptyList();
+        }
+        try {
+            return fileMetaDao.queryBuilder().where(FileMetaDao.Properties.Path.like("smb://%")).list();
+        } catch (Exception e) {
+            LOG.e(e);
+            return Collections.emptyList();
+        }
+    }
+
     public List<FileMeta> getAllWithoutPages() {
         try {
             return fileMetaDao.queryBuilder().where(FileMetaDao.Properties.Pages.isNull()).list();

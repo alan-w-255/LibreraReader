@@ -13,6 +13,7 @@ import com.foobnix.model.AppState;
 import com.foobnix.pdf.info.ExtUtils;
 import com.foobnix.pdf.info.Playlists;
 import com.foobnix.ui2.AppDB;
+import com.foobnix.model.AppProfile;
 import com.foobnix.ui2.FileMetaCore;
 import com.foobnix.ui2.adapter.FileMetaAdapter;
 
@@ -275,6 +276,19 @@ public class SearchCore {
 
     public static List<FileMeta> getFilesAndDirs(String path, boolean filterEmpty, boolean isDisplayAllFilesInFolder) {
         LOG.d("getFilesAndDirs",path);
+        List<FileMeta> files = getFilesAndDirsOnDisk(path, filterEmpty, isDisplayAllFilesInFolder);
+        // dangbei-tv patch: cloud bookshelf rows (smb://) live only in the DB; show them at
+        // the shelf roots next to the local books, even when the local folder is empty
+        if (path != null && (path.equals("/storage/emulated/0") || path.equals("/sdcard")
+                || path.equals(AppProfile.DOWNLOADS_DIR.getPath()))) {
+            List<FileMeta> withCloud = new ArrayList<FileMeta>(files);
+            withCloud.addAll(AppDB.get().getAllSmb());
+            return withCloud;
+        }
+        return files;
+    }
+
+    private static List<FileMeta> getFilesAndDirsOnDisk(String path, boolean filterEmpty, boolean isDisplayAllFilesInFolder) {
         File file = new File(path);
         if (!file.isDirectory()) {
             return Collections.emptyList();

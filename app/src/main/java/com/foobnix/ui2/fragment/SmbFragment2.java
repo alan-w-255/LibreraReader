@@ -28,6 +28,7 @@ import com.foobnix.dao2.FileMeta;
 import com.foobnix.pdf.info.ExtUtils;
 import com.foobnix.pdf.info.R;
 import com.foobnix.smb.SmbHelper;
+import com.foobnix.smb.SmbShelf;
 import com.foobnix.smb.SmbServerPrefs;
 import com.foobnix.sys.TempHolder;
 import com.foobnix.ui2.AppDB;
@@ -48,10 +49,6 @@ import java.util.concurrent.Executors;
 public class SmbFragment2 extends UIFragment<Object> {
 
     public static final Pair<Integer, Integer> PAIR = new Pair<Integer, Integer>(R.string.smb_network_library, R.drawable.glyphicons_417_globe);
-
-    private static final Set<String> BOOK_EXTS = new HashSet<String>(Arrays.asList(
-            "pdf", "epub", "mobi", "azw", "azw3", "fb2", "djvu", "cbz", "cbr", "txt", "rtf",
-            "doc", "docx", "odt", "tiff", "html", "htm", "md", "zip"));
 
     private RecyclerView recyclerView;
     private RowAdapter adapter;
@@ -155,6 +152,16 @@ public class SmbFragment2 extends UIFragment<Object> {
             }
         });
         List<SmbRow> rows = new ArrayList<SmbRow>();
+        if (currentPath == null || currentPath.isEmpty()) {
+            rows.add(new SmbRow(R.drawable.glyphicons_589_book_open,
+                    getString(R.string.smb_sync_shelf), getString(R.string.smb_sync_shelf_sub),
+                    new Runnable() {
+                @Override
+                public void run() {
+                    syncShelf();
+                }
+            }));
+        }
         for (SmbHelper.Entry e : sorted) {
             if (e.dir) {
                 final String name = e.name;
@@ -177,7 +184,7 @@ public class SmbFragment2 extends UIFragment<Object> {
 
     private SmbRow fileRow(final String name, final long size) {
         String ext = ExtUtils.getFileExtension(name);
-        boolean isBook = BOOK_EXTS.contains(ext == null ? "" : ext.toLowerCase(Locale.US));
+        boolean isBook = SmbShelf.BOOK_EXTS.contains(ext == null ? "" : ext.toLowerCase(Locale.US));
         return new SmbRow(isBook ? R.drawable.glyphicons_589_book_open : R.drawable.my_glyphicons_114_paragraph_justify,
                 name, human(size), new Runnable() {
                     @Override
@@ -185,6 +192,51 @@ public class SmbFragment2 extends UIFragment<Object> {
                         downloadAndOpen(name, size);
                     }
                 });
+    }
+
+    private boolean syncing = false;
+
+    private void syncShelf() {
+        LOG.d("SmbSync", "clicked, syncing=", syncing);
+        if (syncing) {
+            return;
+        }
+        final SmbServerPrefs.Srv s = SmbServerPrefs.get(getContext());
+        syncing = true;
+        adapter.setSubtitle(getString(R.string.smb_sync_shelf), "...");
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                int[] res = {0, 0};
+                Exception err = null;
+                try {
+                    LOG.d("SmbSync", "scan start");
+                    res = com.foobnix.smb.SmbShelf.syncToShelf(getContext(), "");
+                    LOG.d("SmbSync", "scan done", res[0], res[1]);
+                } catch (Throwable e) {
+                    err = (Exception) e;
+                    LOG.e(e, "SmbSync fail");
+                }
+                final int added = res[0], local = res[1];
+                final Exception ferr = err;
+                ui.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        syncing = false;
+                        if (ferr != null) {
+                            adapter.setSubtitle(getString(R.string.smb_sync_shelf), getString(R.string.loading_error));
+                            Toast.makeText(getContext(), R.string.loading_error, Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                        adapter.setSubtitle(getString(R.string.smb_sync_shelf),
+                                getString(R.string.smb_sync_result, added, local));
+                        Toast.makeText(getContext(), getString(R.string.smb_sync_result, added, local), Toast.LENGTH_LONG).show();
+                        org.greenrobot.eventbus.EventBus.getDefault().post(
+                                new com.foobnix.pdf.search.activity.msg.UpdateAllFragments());
+                    }
+                });
+            }
+        });
     }
 
     private void downloadAndOpen(final String name, final long total) {
@@ -356,6 +408,7 @@ public class SmbFragment2 extends UIFragment<Object> {
             holder.title.setText(r.title);
             TxtUtils.underlineTextView(holder.title);
             holder.sub.setText(r.sub == null ? "" : r.sub);
+            holder.itemView.setOnFocusChangeListener(com.foobnix.ui2.TvFocus.SCALE_BUTTON);
             holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
